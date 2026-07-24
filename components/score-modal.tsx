@@ -9,58 +9,68 @@ export function ScoreModal() {
   if (!item) return null;
   const r = scoreItem(item.keywords, weights);
   const onClose = () => setScoreModal(null);
+  const scoreTone = r.score >= 75 ? "text-ax-accent" : r.score >= 55 ? "text-ax-info" : "text-ax-dim";
+
   return (
-    <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-slate-950 border border-slate-800 rounded-xl w-full max-w-lg max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="px-5 py-4 border-b border-slate-800 flex items-start justify-between">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="glass rounded-3xl w-full max-w-lg max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="px-5 py-4 border-b border-ax flex items-start justify-between gap-4">
           <div>
-            <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Axom Opportunity Score</div>
-            <div className="text-sm text-slate-200 font-medium">{item.program}</div>
+            <div className="eyebrow">Axom Opportunity Score</div>
+            <div className="text-sm text-ax-text font-semibold mt-1">{item.program}</div>
           </div>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-200"><X size={16} /></button>
+          <button onClick={onClose} className="text-ax-muted hover:text-ax-text transition" aria-label="Close"><X size={16} /></button>
         </div>
-        <div className="p-5 space-y-4">
-          <div className="flex items-end gap-4">
+
+        <div className="p-5 space-y-5">
+          <div className="flex items-end gap-5">
             <div>
-              <div className={`text-5xl font-mono font-bold ${r.score >= 75 ? "text-emerald-400" : r.score >= 55 ? "text-blue-400" : "text-slate-400"}`}>{r.score}</div>
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider mt-1">Overall</div>
+              <div className={`text-5xl font-bold tabular tracking-tight ${scoreTone}`}>{r.score}</div>
+              <div className="eyebrow mt-1">Overall</div>
             </div>
-            <div className="pb-1">
-              <div className="text-xl font-mono text-slate-300">{r.confidence}%</div>
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider">Confidence</div>
+            <div className="pb-1.5">
+              <div className="text-xl font-bold text-ax-dim tabular">{r.confidence}%</div>
+              <div className="eyebrow">Confidence</div>
             </div>
           </div>
+
           <div>
-            <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-2">Why it scored this way</div>
-            <div className="space-y-1">
+            <div className="eyebrow mb-2">Why it scored this way</div>
+            <div className="space-y-1.5">
               {r.matched.map((w) => (
-                <div key={w.key} className="flex justify-between text-xs bg-emerald-500/5 border border-emerald-500/20 rounded px-2 py-1">
-                  <span className="text-emerald-300">{w.label}</span>
-                  <span className="font-mono text-emerald-400">+{w.weight}</span>
+                <div key={w.key} className="flex justify-between text-xs rounded-lg px-3 py-1.5 bg-ax-accent-bg border border-ax-accent-border">
+                  <span className="text-ax-accent">{w.label}</span>
+                  <span className="font-mono text-ax-accent tabular">+{w.weight}</span>
                 </div>
               ))}
-              {r.matched.length === 0 && <div className="text-xs text-slate-500">No weighted criteria matched.</div>}
+              {r.matched.length === 0 && (
+                <div className="prose-body text-xs text-ax-muted">No weighted criteria matched.</div>
+              )}
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-1.5">Matched keywords</div>
+              <div className="eyebrow mb-2">Matched keywords</div>
               <div className="flex flex-wrap gap-1">
-                {item.keywords.map((k) => <span key={k} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">{k}</span>)}
+                {item.keywords.length > 0
+                  ? item.keywords.map((k) => <span key={k} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-ax-glass-hi border border-ax text-ax-dim">{k}</span>)
+                  : <span className="prose-body text-[10px] text-ax-muted">None detected</span>}
               </div>
             </div>
             <div>
-              <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-1.5">Missing criteria</div>
+              <div className="eyebrow mb-2">Missing criteria</div>
               <div className="flex flex-wrap gap-1">
-                {r.missing.map((w) => <span key={w.key} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-500">{w.label}</span>)}
+                {r.missing.map((w) => <span key={w.key} className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-ax text-ax-muted">{w.label}</span>)}
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs border-t border-slate-800 pt-4">
+
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-xs border-t border-ax pt-4">
             {([["Recommended action", r.nextAction], ["Internal priority", r.priority], ["Proposal difficulty", r.difficulty], ["Probability of success", r.pWin], ["Strategic value", r.strategic]] as const).map(([k, v]) => (
               <div key={k}>
-                <div className="text-slate-500 text-[10px] uppercase tracking-wider">{k}</div>
-                <div className="text-slate-300 mt-0.5">{v}</div>
+                <div className="eyebrow">{k}</div>
+                <div className="prose-body text-ax-dim mt-1 leading-relaxed">{v}</div>
               </div>
             ))}
           </div>

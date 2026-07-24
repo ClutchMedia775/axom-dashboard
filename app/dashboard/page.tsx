@@ -2,6 +2,8 @@
 
 import { useAppState } from "@/components/app-state";
 import { Deadline } from "@/components/deadline";
+import { DeadlineTimeline } from "@/components/deadline-timeline";
+import { KpiStrip } from "@/components/kpi-strip";
 import { ScoreBadge } from "@/components/score-badge";
 import { Widget } from "@/components/widget";
 import { useConferences, useNews, usePapers, useProgramManagers, useScoredOpportunities, useVenture } from "@/lib/hooks";
@@ -18,95 +20,98 @@ export default function DashboardPage() {
   const { data: conferences } = useConferences();
   const { data: venture } = useVenture();
 
-  const deadlines = [...scored].sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime()).slice(0, 5);
+  const deadlines = [...scored].sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime()).slice(0, 6);
   const byAgency = (ag: string) => scored.filter((o) => o.agency === ag);
+  const agenciesWithItems = ["DARPA", "DOE", "ARPA-H", "NSF", "NIH", "NIST"].filter((ag) => byAgency(ag).length > 0);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-      <Widget title="Upcoming Deadlines" action={() => router.push("/funding")} wide>
-        {deadlines.map((o) => (
-          <button key={o.id} onClick={() => router.push(`/funding/${o.id}`)} className="w-full flex items-center justify-between gap-3 px-2 py-1.5 rounded hover:bg-slate-800/50 transition text-left">
-            <div className="min-w-0">
-              <div className="text-xs text-slate-200 truncate">{o.program}</div>
-              <div className="text-[10px] text-slate-500 font-mono">{o.agency} · {o.type}</div>
-            </div>
-            <div className="flex items-center gap-3 shrink-0">
-              <Deadline d={o.deadline} />
-              <ScoreBadge s={o._s.score} onClick={(e) => { e.stopPropagation(); setScoreModal(o); }} />
-            </div>
-          </button>
-        ))}
-      </Widget>
+    <div className="space-y-3">
+      <KpiStrip />
+      <DeadlineTimeline />
 
-      <Widget title="Program Managers to Contact" action={() => router.push("/program-managers")}>
-        {(pms ?? []).slice(0, 4).map((p) => (
-          <button key={p.id} onClick={() => router.push(`/program-managers/${p.id}`)} className="w-full flex items-center justify-between px-2 py-1.5 rounded hover:bg-slate-800/50 transition text-left">
-            <div>
-              <div className="text-xs text-slate-200">{p.name}</div>
-              <div className="text-[10px] text-slate-500">{p.agency} · {p.office}</div>
-            </div>
-            <ChevronRight size={13} className="text-slate-600" />
-          </button>
-        ))}
-      </Widget>
+      {/* Bento: deadlines gets the wide tile, everything else fills around it. */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <Widget title="Upcoming Deadlines" action={() => router.push("/funding")} className="md:col-span-2 md:row-span-2">
+          {deadlines.map((o) => (
+            <button key={o.id} onClick={() => router.push(`/funding/${o.id}`)}
+              className="w-full flex items-center justify-between gap-3 px-2 py-2 rounded-lg hover:bg-ax-glass-hi transition text-left">
+              <div className="min-w-0">
+                <div className="text-xs text-ax-text font-medium truncate">{o.program}</div>
+                <div className="text-[10px] text-ax-dim font-mono mt-0.5">{o.agency} · {o.type}</div>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <Deadline d={o.deadline} />
+                <ScoreBadge s={o._s.score} onClick={(e) => { e.stopPropagation(); setScoreModal(o); }} />
+              </div>
+            </button>
+          ))}
+          {deadlines.length === 0 && <div className="prose-body text-[11px] text-ax-muted px-2 py-2">Loading opportunities…</div>}
+        </Widget>
 
-      {["DARPA", "DOE", "ARPA-H", "NSF", "NIH", "NIST"].map((ag) => (
-        <Widget key={ag} title={`${ag} Opportunities`} action={() => { setAgencyFilter(ag); router.push("/funding"); }}>
-          {byAgency(ag).length === 0 && <div className="text-[11px] text-slate-600 px-2 py-1">No open items tracked.</div>}
-          {byAgency(ag).map((o) => (
-            <button key={o.id} onClick={() => router.push(`/funding/${o.id}`)} className="w-full flex items-center justify-between px-2 py-1.5 rounded hover:bg-slate-800/50 transition text-left">
-              <div className="text-xs text-slate-300 truncate pr-2">{o.program}</div>
-              <ScoreBadge s={o._s.score} onClick={(e) => { e.stopPropagation(); setScoreModal(o); }} />
+        <Widget title="Program Managers" action={() => router.push("/program-managers")}>
+          {(pms ?? []).slice(0, 4).map((p) => (
+            <button key={p.id} onClick={() => router.push(`/program-managers/${p.id}`)}
+              className="w-full flex items-center justify-between px-2 py-2 rounded-lg hover:bg-ax-glass-hi transition text-left">
+              <div className="min-w-0">
+                <div className="text-xs text-ax-text font-medium truncate">{p.name}</div>
+                <div className="text-[10px] text-ax-dim truncate">{p.agency} · {p.office}</div>
+              </div>
+              <ChevronRight size={13} className="text-ax-muted shrink-0" />
             </button>
           ))}
         </Widget>
-      ))}
 
-      <Widget title="Recent Scientific AI Papers" action={() => router.push("/papers")}>
-        {(papers ?? []).slice(0, 4).map((p) => (
-          <div key={p.id} className="px-2 py-1.5">
-            <div className="text-xs text-slate-300 leading-snug">{p.title}</div>
-            <div className="text-[10px] text-slate-500 font-mono mt-0.5">{p.venue} · {p.date}</div>
-          </div>
-        ))}
-      </Widget>
-
-      <Widget title="Recent AI Policy & News" action={() => router.push("/news")}>
-        {(news ?? []).slice(0, 4).map((n) => (
-          <div key={n.id} className="px-2 py-1.5">
-            <div className="text-xs text-slate-300 leading-snug">{n.title}</div>
-            <div className="text-[10px] text-slate-500 font-mono mt-0.5">{n.src} · {n.date}</div>
-          </div>
-        ))}
-      </Widget>
-
-      <Widget title="Upcoming Conferences" action={() => router.push("/conferences")}>
-        {(conferences ?? []).slice(0, 4).map((c) => (
-          <div key={c.id} className="px-2 py-1.5 flex justify-between gap-2">
-            <div className="text-xs text-slate-300">{c.name}</div>
-            <div className="text-[10px] text-slate-500 font-mono shrink-0">{c.date}</div>
-          </div>
-        ))}
-      </Widget>
-
-      <Widget title="Recent Venture Funding" action={() => router.push("/companies")}>
-        {(venture ?? []).map((v) => (
-          <div key={v.id} className="px-2 py-1.5 flex justify-between gap-2">
-            <div>
-              <div className="text-xs text-slate-300">{v.co}</div>
-              <div className="text-[10px] text-slate-500">{v.focus}</div>
+        <Widget title="Recent Venture Funding" action={() => router.push("/companies")}>
+          {(venture ?? []).map((v) => (
+            <div key={v.id} className="px-2 py-2 flex justify-between gap-2">
+              <div className="min-w-0">
+                <div className="text-xs text-ax-text truncate">{v.co}</div>
+                <div className="text-[10px] text-ax-dim truncate">{v.focus}</div>
+              </div>
+              <div className="text-[11px] font-mono text-ax-accent shrink-0 tabular">{v.round}</div>
             </div>
-            <div className="text-[11px] font-mono text-emerald-400 shrink-0">{v.round}</div>
-          </div>
-        ))}
-      </Widget>
+          ))}
+        </Widget>
 
-      <Widget title="National Lab Opportunities" action={() => router.push("/labs")}>
-        <div className="px-2 py-1.5 text-xs text-slate-300">DOE ASCR exascale FOA requires lab partnership — ANL and ORNL flagged as best-fit hosts for AXOM&apos;s HPC-adjacent modules.</div>
-        <div className="flex flex-wrap gap-1 px-2 pb-1">
-          {["Argonne", "Oak Ridge", "LBNL"].map((l) => <span key={l} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-300">{l}</span>)}
-        </div>
-      </Widget>
+        {agenciesWithItems.map((ag) => (
+          <Widget key={ag} title={`${ag} Opportunities`} action={() => { setAgencyFilter(ag); router.push("/funding"); }}>
+            {byAgency(ag).slice(0, 4).map((o) => (
+              <button key={o.id} onClick={() => router.push(`/funding/${o.id}`)}
+                className="w-full flex items-center justify-between gap-2 px-2 py-2 rounded-lg hover:bg-ax-glass-hi transition text-left">
+                <div className="text-xs text-ax-dim truncate">{o.program}</div>
+                <ScoreBadge s={o._s.score} onClick={(e) => { e.stopPropagation(); setScoreModal(o); }} />
+              </button>
+            ))}
+          </Widget>
+        ))}
+
+        <Widget title="Recent Scientific AI Papers" action={() => router.push("/papers")}>
+          {(papers ?? []).slice(0, 3).map((p) => (
+            <div key={p.id} className="px-2 py-2">
+              <div className="prose-body text-xs text-ax-dim leading-snug">{p.title}</div>
+              <div className="text-[10px] text-ax-muted font-mono mt-1">{p.venue} · {p.date}</div>
+            </div>
+          ))}
+        </Widget>
+
+        <Widget title="AI Policy & News" action={() => router.push("/news")}>
+          {(news ?? []).slice(0, 3).map((n) => (
+            <div key={n.id} className="px-2 py-2">
+              <div className="prose-body text-xs text-ax-dim leading-snug">{n.title}</div>
+              <div className="text-[10px] text-ax-muted font-mono mt-1">{n.src} · {n.date}</div>
+            </div>
+          ))}
+        </Widget>
+
+        <Widget title="Upcoming Conferences" action={() => router.push("/conferences")}>
+          {(conferences ?? []).slice(0, 4).map((c) => (
+            <div key={c.id} className="px-2 py-2 flex justify-between gap-2">
+              <div className="text-xs text-ax-dim truncate">{c.name}</div>
+              <div className="text-[10px] text-ax-muted font-mono shrink-0 tabular">{c.date}</div>
+            </div>
+          ))}
+        </Widget>
+      </div>
     </div>
   );
 }

@@ -10,15 +10,19 @@ export default function AgenciesPage() {
   const { setAgencyFilter } = useAppState();
   const scored = useScoredOpportunities();
 
+  const all = [...new Set([...AGENCIES, ...scored.map((o) => o.agency)])];
+
   return (
     <div className="grid sm:grid-cols-2 gap-3 max-w-3xl">
-      {AGENCIES.map((a) => {
+      {all.map((a) => {
         const n = scored.filter((o) => o.agency === a).length;
         return (
           <button key={a} onClick={() => { setAgencyFilter(a); router.push("/funding"); }}
-            className="text-left border border-slate-800 rounded-lg px-4 py-3 bg-slate-900/40 hover:border-blue-500/40 transition flex justify-between items-center">
-            <span className="text-xs text-slate-200 font-mono">{a}</span>
-            <span className="text-[10px] text-slate-500">{n} tracked {n === 1 ? "opportunity" : "opportunities"}</span>
+            className="glass glass-hover text-left rounded-2xl px-4 py-3.5 flex justify-between items-center">
+            <span className="text-xs text-ax-text font-mono font-semibold">{a}</span>
+            <span className="prose-body text-[10px] text-ax-dim tabular">
+              {n} tracked {n === 1 ? "opportunity" : "opportunities"}
+            </span>
           </button>
         );
       })}

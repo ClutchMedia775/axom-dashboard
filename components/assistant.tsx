@@ -45,51 +45,63 @@ export function Assistant() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: history, context }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data: { reply: string } = await res.json();
-      setMsgs((m) => [...m, { role: "assistant", content: data.reply }]);
-    } catch {
-      setMsgs((m) => [...m, { role: "assistant", content: "Request failed — try again." }]);
+      const data: { reply?: string; error?: string } = await res.json();
+      if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
+      setMsgs((m) => [...m, { role: "assistant", content: data.reply ?? "No response." }]);
+    } catch (e) {
+      setMsgs((m) => [...m, { role: "assistant", content: e instanceof Error ? e.message : "Request failed — try again." }]);
     }
     setBusy(false);
   }
 
   if (!open) return null;
   return (
-    <div className="fixed inset-y-0 right-0 w-full sm:w-[420px] bg-slate-950 border-l border-slate-800 z-50 flex flex-col shadow-2xl">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
-        <div className="flex items-center gap-2">
-          <Sparkles size={15} className="text-emerald-400" />
-          <span className="text-sm font-semibold text-slate-200">Axom Assistant</span>
-          {context && <span className="text-[10px] font-mono text-slate-500 truncate max-w-[140px]">ctx: {context.program}</span>}
+    <div className="fixed inset-y-0 right-0 w-full sm:w-[420px] z-50 flex flex-col shadow-2xl glass border-y-0 border-r-0 rounded-none">
+      <div className="flex items-center justify-between px-4 py-3.5 border-b border-ax">
+        <div className="flex items-center gap-2 min-w-0">
+          <Sparkles size={15} className="text-ax-accent shrink-0" />
+          <span className="text-sm font-bold text-ax-text tracking-wide">Axom Assistant</span>
+          {context && <span className="text-[10px] font-mono text-ax-muted truncate">ctx: {context.program}</span>}
         </div>
-        <button onClick={() => setAssistantOpen(false)} className="text-slate-500 hover:text-slate-200"><X size={16} /></button>
+        <button onClick={() => setAssistantOpen(false)} className="text-ax-muted hover:text-ax-text transition" aria-label="Close assistant">
+          <X size={16} />
+        </button>
       </div>
+
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {msgs.length === 0 && (
           <div className="space-y-2">
-            <p className="text-xs text-slate-500">Ask about solicitations, fit, requirements, or strategy.</p>
+            <p className="prose-body text-xs text-ax-muted">Ask about solicitations, fit, requirements, or strategy.</p>
             {QUICK.map((q) => (
               <button key={q} onClick={() => send(q)}
-                className="block w-full text-left text-xs text-slate-300 bg-slate-900 border border-slate-800 rounded px-3 py-2 hover:border-emerald-500/50 transition">
+                className="glass glass-hover block w-full text-left text-xs text-ax-dim hover:text-ax-text rounded-xl px-3 py-2.5 transition">
                 {q}
               </button>
             ))}
           </div>
         )}
         {msgs.map((m, i) => (
-          <div key={i} className={`text-sm leading-relaxed whitespace-pre-wrap rounded-lg px-3 py-2 ${
-            m.role === "user" ? "bg-blue-500/10 border border-blue-500/20 text-blue-100 ml-6" : "bg-slate-900 border border-slate-800 text-slate-300 mr-2"}`}>
+          <div key={i} className={`prose-body text-sm leading-relaxed whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 ${
+            m.role === "user"
+              ? "bg-ax-accent-bg border border-ax-accent-border text-ax-text ml-6"
+              : "glass text-ax-dim mr-2"}`}>
             {m.content}
           </div>
         ))}
-        {busy && <div className="flex items-center gap-2 text-slate-500 text-xs"><Loader2 size={13} className="animate-spin" /> Thinking…</div>}
+        {busy && (
+          <div className="flex items-center gap-2 text-ax-muted text-xs">
+            <Loader2 size={13} className="animate-spin" /> Thinking…
+          </div>
+        )}
         <div ref={endRef} />
       </div>
-      <div className="p-3 border-t border-slate-800 flex gap-2">
+
+      <div className="p-3 border-t border-ax flex gap-2">
         <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()}
-          placeholder="Ask the assistant…" className="flex-1 bg-slate-900 border border-slate-800 rounded px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500/50" />
-        <button onClick={() => send()} disabled={busy} className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white rounded px-3 transition">
+          placeholder="Ask the assistant…"
+          className="prose-body flex-1 rounded-xl px-3 py-2 text-sm text-ax-text placeholder-ax-muted bg-ax-glass border border-ax focus:outline-none focus:border-ax-accent-border transition" />
+        <button onClick={() => send()} disabled={busy} aria-label="Send"
+          className="rounded-xl px-3.5 transition bg-ax-accent-bg border border-ax-accent-border text-ax-accent hover:brightness-125 disabled:opacity-40">
           <Send size={15} />
         </button>
       </div>

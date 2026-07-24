@@ -3,18 +3,19 @@
 import { ArrowUpRight } from "lucide-react";
 import type { ReactNode } from "react";
 
-export function Widget({ title, action, children, wide }: {
+export function Widget({ title, action, children, className = "" }: {
   title: string;
   action?: () => void;
   children: ReactNode;
-  wide?: boolean;
+  /** Grid spans for the bento layout, e.g. "md:col-span-2 md:row-span-2". */
+  className?: string;
 }) {
   return (
-    <div className={`bg-slate-900/60 border border-slate-800 rounded-lg overflow-hidden flex flex-col ${wide ? "col-span-2" : ""}`}>
-      <div className="flex items-center justify-between px-3 py-2 border-b border-slate-800/80">
-        <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">{title}</span>
+    <div className={`glass rounded-2xl overflow-hidden flex flex-col ${className}`}>
+      <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-ax">
+        <span className="eyebrow">{title}</span>
         {action && (
-          <button onClick={action} className="text-slate-500 hover:text-emerald-400 transition">
+          <button onClick={action} className="text-ax-muted hover:text-ax-accent transition" aria-label={`Open ${title}`}>
             <ArrowUpRight size={13} />
           </button>
         )}
