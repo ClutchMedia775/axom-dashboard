@@ -19,7 +19,7 @@ Open http://localhost:3000.
 | Variable | Required | Purpose |
 |---|---|---|
 | `NEXT_PUBLIC_DATA_PROVIDER` | No | Set to `live` for real Grants.gov/SAM.gov data. Unset uses bundled mock data. |
-| `ANTHROPIC_API_KEY` | No | Enables the Axom Assistant panel. Without it the Assistant returns a clear "not configured" message; the rest of the app works. |
+| `ANTHROPIC_API_KEY` | No | Enables the Axom Assistant panel **and** model-based opportunity classification (see Scoring below). Without it the Assistant returns a clear "not configured" message and scoring falls back to the deterministic keyword tagger; the rest of the app works. |
 | `SAM_GOV_API_KEY` | No | Free key from SAM.gov (Account Details → API Key). Without it, live mode runs on Grants.gov alone. |
 
 ## Architecture
@@ -31,7 +31,13 @@ one file, not touching any UI component.
 
 **Scoring engine** (`lib/scoring.ts`) — the Axom Opportunity Score. Weights are
 adjustable at runtime on the Settings page and every score in the app
-recalculates live.
+recalculates live. Opportunities are tagged against the scoring taxonomy in two
+passes: a deterministic keyword tagger (`lib/ingest/tagger.ts`) that fires on
+exact phrases, then — when `ANTHROPIC_API_KEY` is set — a model-based classifier
+(`lib/ingest/classifier.ts`) that reads each solicitation and maps it onto the
+same taxonomy keys semantically, so relevant work scores even when it avoids the
+literal keywords. The classifier only augments the deterministic tags and no-ops
+without a key, so scoring never depends on the model being reachable.
 
 **Ingestion** (`lib/ingest/`) — one module per upstream source. Each fetches,
 normalizes into the shared `Opportunity` type, and tags keywords against the
@@ -43,9 +49,9 @@ papers, news, conferences, and companies.
 
 ## Current status
 
-Opportunities are live. Program managers, papers, news, conferences, and
-venture data still serve mock content pending their own ingestion modules.
+Opportunities are live and scored through both the deterministic tagger and the
+model-based classifier. Program managers, papers, news, conferences, and venture
+data still serve mock content pending their own ingestion modules.
 
-Known limitation: the keyword tagger matches exact taxonomy phrases, so
-solicitations that describe relevant work in different wording score low.
-Replacing it with model-based classification is the next planned improvement.
+Next planned improvement: real ingestion for the remaining categories —
+papers → arXiv, venture → SEC EDGAR, news → RSS.

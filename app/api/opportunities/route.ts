@@ -1,3 +1,4 @@
+import { classifyOpportunities } from "@/lib/ingest/classifier";
 import { fetchGrantsGovOpportunities } from "@/lib/ingest/grantsgov";
 import { fetchSamGovOpportunities } from "@/lib/ingest/samgov";
 import type { Opportunity } from "@/lib/types";
@@ -29,5 +30,10 @@ export async function GET() {
     return NextResponse.json({ error: errors.join("; ") }, { status: 502 });
   }
 
-  return NextResponse.json({ opportunities, errors });
+  // Semantic pass: map each opportunity onto the scoring taxonomy so relevant
+  // work scores even when it avoids the literal keywords. No-op without
+  // ANTHROPIC_API_KEY, so the route degrades to deterministic tagging.
+  const classified = await classifyOpportunities(opportunities);
+
+  return NextResponse.json({ opportunities: classified, errors });
 }
