@@ -101,6 +101,7 @@ function normalize(hit: OppHit, detail: OppDetail | null): Opportunity {
     techArea: keywords[0] ? keywords[0].replace(/\b\w/g, (ch) => ch.toUpperCase()) : "Federal Grant",
     summary: summary || title,
     pm: syn?.agencyContactName ?? "—",
+    pmEmail: syn?.agencyContactEmail,
     link: `grants.gov/search-results-detail/${hit.id}`,
     eligibility: syn?.applicantTypes?.map((a) => a.description).filter(Boolean).join("; ") || "See solicitation",
     requirements: "See full announcement on Grants.gov",

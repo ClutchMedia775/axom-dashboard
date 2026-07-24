@@ -72,6 +72,7 @@ and normalizing into a shared type from `lib/types.ts`:
 | `arxiv.ts` | arXiv Atom API | `Paper` |
 | `edgar.ts` | SEC EDGAR Form D | `VentureRound` |
 | `news.ts` | DOE / DARPA / NSF / ScienceDaily RSS | `NewsItem` |
+| `program-managers.ts` | derived from ingested opportunities | `ProgramManager` |
 
 `feed.ts` holds the small Atom/RSS readers shared by `arxiv.ts` and `news.ts`;
 `tagger.ts` holds text cleanup and taxonomy tagging shared by everything.
@@ -87,6 +88,16 @@ provide rather than what we would prefer:
 - **Agency RSS feeds are general-purpose.** The DOE feed carries solar and grid
   announcements alongside AI work, so `news.ts` filters for relevance before
   anything reaches the dashboard.
+- **Program managers are derived, not fetched.** No public API lists federal
+  program managers, so `program-managers.ts` builds the index from the contact
+  each ingested solicitation publishes — who is running what, how to reach
+  them, and what they fund. Roughly a third of those contacts are shared
+  organizational mailboxes ("National Institutes of Health") rather than
+  people, and they are filtered out. Fields with no public source — bio,
+  profile links, talks, publications, prior programs — are left empty rather
+  than guessed, and the detail page renders only what is known. Guessing a
+  profile URL from a person's name would fabricate a record about a real
+  individual.
 
 **Routes** — `/dashboard`, `/funding` (+ detail), `/program-managers`
 (+ detail), `/settings`, plus reference sections for agencies, labs, biotech,
@@ -95,9 +106,11 @@ papers, news, conferences, and companies.
 ## Current status
 
 Live: opportunities (scored through both the deterministic tagger and the
-model-based classifier), papers, venture rounds, and news.
+model-based classifier), papers, venture rounds, news, and program managers.
 
-Still mock: program managers, conferences, national labs, and biotech orgs.
-These are hand-curated because no clean public source exists for them —
-program-manager coverage in particular would need assembling from agency
-directories, solicitation contacts, and conference programs.
+Still mock: conferences, national labs, and biotech orgs — hand-curated, with
+no clean public source.
+
+Program-manager coverage is bounded by the solicitations currently ingested,
+so the directory grows as the opportunity feed does rather than being complete
+on its own.
