@@ -21,6 +21,29 @@ Open http://localhost:3000.
 | `NEXT_PUBLIC_DATA_PROVIDER` | No | Set to `live` for real Grants.gov/SAM.gov data. Unset uses bundled mock data. |
 | `ANTHROPIC_API_KEY` | No | Enables the Axom Assistant panel **and** model-based opportunity classification (see Scoring below). Without it the Assistant returns a clear "not configured" message and scoring falls back to the deterministic keyword tagger; the rest of the app works. |
 | `SAM_GOV_API_KEY` | No | Free key from SAM.gov (Account Details → API Key). Without it, live mode runs on Grants.gov alone. |
+| `AXOM_ACCESS_PASSWORD` | **In production** | Shared password gating the credit-spending routes (see Access control). Unset in production ⇒ those routes return 503 rather than serving unauthenticated. Unset in local dev ⇒ ungated, for zero-setup development. |
+
+## Access control
+
+`/api/assistant` spends Anthropic credits on caller-supplied input, so on a
+public deployment an open endpoint is effectively a free Claude proxy billed to
+you. Two gates sit in front of it:
+
+**Shared-password session** (`lib/auth.ts`) — the dashboard is single-tenant, so
+rather than user accounts there is one password. `POST /api/auth` exchanges it
+for an HMAC-signed, httpOnly, 12-hour cookie; the password doubles as the HMAC
+key, so rotating it invalidates every outstanding session. The Assistant panel
+prompts for it inline and re-prompts on expiry. **Fails closed**: in production
+with no password set, the gated routes return 503 instead of serving openly.
+
+**Rate limiting** (`lib/rate-limit.ts`) — fixed-window, per client IP: 20
+assistant requests per 5 minutes, and a tighter 10-per-15-minutes on unlock
+attempts to make password guessing impractical. Counters are per-instance, so on
+serverless this caps abuse rather than enforcing an exact global ceiling; set a
+spend limit on the Anthropic key as the real backstop.
+
+`/api/opportunities` is lower risk — it is a cached `GET` (`revalidate = 3600`),
+so classification runs at most hourly regardless of traffic.
 
 ## Architecture
 

@@ -1,5 +1,12 @@
+import { checkAuth } from "@/lib/auth";
+import { clientKey, rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
+
+// This route spends Anthropic credits on caller-supplied input, so it is gated
+// twice: a shared-password session, then a per-client request budget.
+const LIMIT = 20;
+const WINDOW_MS = 5 * 60 * 1000;
 
 // Reads ANTHROPIC_API_KEY from the server environment — the key never
 // reaches the browser (the prototype called api.anthropic.com directly
@@ -17,6 +24,17 @@ interface ChatMessage {
 }
 
 export async function POST(req: Request) {
+  // Cheap rejections first: throttle before touching auth or the upstream API.
+  const limit = rateLimit(`assistant:${clientKey(req)}`, LIMIT, WINDOW_MS);
+  if (!limit.allowed) {
+    return tooManyRequests(limit.retryAfter, "Rate limit reached — try again shortly.");
+  }
+
+  const auth = checkAuth(req);
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json(
       { error: "Assistant is not configured — set ANTHROPIC_API_KEY." },
