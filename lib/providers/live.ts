@@ -31,7 +31,6 @@ export const liveProvider: DataProvider = {
   getNews: () => getJson<NewsItem[]>("/api/news", "news"),
   getProgramManagers: async (): Promise<ProgramManager[]> =>
     deriveProgramManagers(await getJson<Opportunity[]>("/api/opportunities", "opportunities")),
-  getConferences: mockProvider.getConferences,
   getNationalLabs: mockProvider.getNationalLabs,
   getBiotechOrgs: mockProvider.getBiotechOrgs,
 };

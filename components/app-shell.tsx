@@ -106,6 +106,21 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           {/* Content */}
           <main className="flex-1 overflow-y-auto p-4">
+            {/* Sample data is indistinguishable from real data at a glance, so
+                say so loudly rather than in small grey type. Missing the
+                NEXT_PUBLIC_DATA_PROVIDER=live setting is the easy mistake. */}
+            {!isLiveProvider && (
+              <div className="mb-4 rounded-xl px-4 py-3 border border-ax-danger/40 bg-ax-danger/10">
+                <div className="text-xs font-bold text-ax-danger">
+                  Showing sample data — not real federal data
+                </div>
+                <div className="prose-body text-[11px] text-ax-dim mt-1 leading-relaxed">
+                  Every record on screen is placeholder content. Set{" "}
+                  <span className="font-mono">NEXT_PUBLIC_DATA_PROVIDER=live</span> and redeploy to
+                  pull live Grants.gov, SAM.gov, arXiv, SEC EDGAR, and agency data.
+                </div>
+              </div>
+            )}
             <div className="mb-4 flex items-baseline gap-3 flex-wrap">
               <h1 className="text-base font-bold text-ax-text uppercase tracking-[0.12em]">
                 {pageTitle(pathname)}

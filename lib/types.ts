@@ -48,14 +48,6 @@ export interface Paper {
   tags: string[];
 }
 
-export interface Conference {
-  id: string;
-  name: string;
-  date: string;
-  loc: string;
-  why: string;
-}
-
 export interface NewsItem {
   id: string;
   src: string;

@@ -1,5 +1,4 @@
 import type {
-  Conference,
   NewsItem,
   Opportunity,
   Paper,
@@ -149,13 +148,6 @@ const MOCK_PAPERS: Paper[] = [
   { id: "p4", title: "Closed-Loop CRISPR Screen Design with LLM Agents", venue: "Nature Methods", date: "2026-07-08", tags: ["crispr", "drug discovery", "agentic ai"] },
 ];
 
-const MOCK_CONFERENCES: Conference[] = [
-  { id: "c1", name: "ADAPT Proposers Day (ARPA-H)", date: "2026-08-06", loc: "Washington, DC", why: "Direct PM access — Raman confirmed attending" },
-  { id: "c2", name: "SC26 — Supercomputing", date: "2026-11-15", loc: "Salt Lake City, UT", why: "DOE lab partnerships, ASCR presence" },
-  { id: "c3", name: "SLAS 2027", date: "2027-01-24", loc: "San Diego, CA", why: "Lab automation buyers + ARPA-H programs" },
-  { id: "c4", name: "AFWERX Accelerate", date: "2026-09-09", loc: "Las Vegas, NV", why: "DAF customer discovery for D2P2 memo" },
-];
-
 const MOCK_NEWS: NewsItem[] = [
   { id: "n1", src: "OSTP", date: "2026-07-21", title: "OSTP issues implementation guidance on federal agentic AI procurement standards" },
   { id: "n2", src: "Endpoints News", date: "2026-07-18", title: "ARPA-H signals second ADAPT cycle will double autonomous-lab funding" },
@@ -178,7 +170,6 @@ export const mockProvider: DataProvider = {
   getOpportunities: async () => MOCK_OPPORTUNITIES,
   getProgramManagers: async () => MOCK_PMS,
   getPapers: async () => MOCK_PAPERS,
-  getConferences: async () => MOCK_CONFERENCES,
   getNews: async () => MOCK_NEWS,
   getVenture: async () => MOCK_VENTURE,
   getNationalLabs: async () => NATIONAL_LABS,

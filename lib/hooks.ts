@@ -18,10 +18,6 @@ export function usePapers() {
   return useQuery({ queryKey: ["papers"], queryFn: () => provider.getPapers() });
 }
 
-export function useConferences() {
-  return useQuery({ queryKey: ["conferences"], queryFn: () => provider.getConferences() });
-}
-
 export function useNews() {
   return useQuery({ queryKey: ["news"], queryFn: () => provider.getNews() });
 }

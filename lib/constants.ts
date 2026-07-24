@@ -1,7 +1,6 @@
 import {
   Bookmark,
   Building2,
-  CalendarDays,
   Dna,
   DollarSign,
   FileText,
@@ -31,7 +30,6 @@ export const NAV: NavItem[] = [
   { href: "/papers", label: "Scientific Papers", icon: FileText },
   { href: "/companies", label: "Companies", icon: Building2 },
   { href: "/news", label: "News", icon: Newspaper },
-  { href: "/conferences", label: "Conferences", icon: CalendarDays },
   { href: "/saved", label: "Saved Opportunities", icon: Star },
   { href: "/bookmarks", label: "Bookmarks", icon: Bookmark },
   { href: "/settings", label: "Settings", icon: Settings },

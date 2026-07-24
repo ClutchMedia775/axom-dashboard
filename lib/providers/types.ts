@@ -1,5 +1,4 @@
 import type {
-  Conference,
   NewsItem,
   Opportunity,
   Paper,
@@ -18,7 +17,6 @@ export interface DataProvider {
   getOpportunities(): Promise<Opportunity[]>;
   getProgramManagers(): Promise<ProgramManager[]>;
   getPapers(): Promise<Paper[]>;
-  getConferences(): Promise<Conference[]>;
   getNews(): Promise<NewsItem[]>;
   getVenture(): Promise<VentureRound[]>;
   getNationalLabs(): Promise<string[]>;

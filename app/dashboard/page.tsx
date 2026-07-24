@@ -6,7 +6,7 @@ import { DeadlineTimeline } from "@/components/deadline-timeline";
 import { KpiStrip } from "@/components/kpi-strip";
 import { ScoreBadge } from "@/components/score-badge";
 import { Widget } from "@/components/widget";
-import { useConferences, useNews, usePapers, useProgramManagers, useScoredOpportunities, useVenture } from "@/lib/hooks";
+import { useNews, usePapers, useProgramManagers, useScoredOpportunities, useVenture } from "@/lib/hooks";
 import { ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -17,7 +17,6 @@ export default function DashboardPage() {
   const { data: pms } = useProgramManagers();
   const { data: papers } = usePapers();
   const { data: news } = useNews();
-  const { data: conferences } = useConferences();
   const { data: venture } = useVenture();
 
   const deadlines = [...scored].sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime()).slice(0, 6);
@@ -103,14 +102,6 @@ export default function DashboardPage() {
           ))}
         </Widget>
 
-        <Widget title="Upcoming Conferences" action={() => router.push("/conferences")}>
-          {(conferences ?? []).slice(0, 4).map((c) => (
-            <div key={c.id} className="px-2 py-2 flex justify-between gap-2">
-              <div className="text-xs text-ax-dim truncate">{c.name}</div>
-              <div className="text-[10px] text-ax-muted font-mono shrink-0 tabular">{c.date}</div>
-            </div>
-          ))}
-        </Widget>
       </div>
     </div>
   );
