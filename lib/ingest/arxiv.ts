@@ -9,7 +9,7 @@ import { cleanText, tagKeywords } from "./tagger";
  * and a solicitation's chips mean the same thing.
  */
 
-const API = "http://export.arxiv.org/api/query";
+const API = "https://export.arxiv.org/api/query";
 
 // Phrase searches, OR'd. Narrower than the scoring taxonomy on purpose: broad
 // terms like "robotics" would swamp the feed with work unrelated to Axom.
