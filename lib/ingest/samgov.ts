@@ -51,6 +51,7 @@ function normalize(n: SamNotice): Opportunity {
     techArea: keywords[0] ? keywords[0].replace(/\b\w/g, (ch) => ch.toUpperCase()) : "Federal Contract",
     summary,
     pm: n.pointOfContact?.[0]?.fullName ?? "—",
+    pmEmail: n.pointOfContact?.[0]?.email,
     link: n.uiLink ?? `sam.gov/opp/${n.noticeId}/view`,
     eligibility: "See solicitation",
     requirements: "See full notice on SAM.gov",

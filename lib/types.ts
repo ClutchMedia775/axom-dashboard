@@ -11,6 +11,8 @@ export interface Opportunity {
   techArea: string;
   summary: string;
   pm: string;
+  /** Contact email from the solicitation, when the source publishes one. */
+  pmEmail?: string;
   link: string;
   eligibility: string;
   requirements: string;

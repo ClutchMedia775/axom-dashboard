@@ -35,7 +35,20 @@ export function tagKeywords(text: string): string[] {
   return [...tags];
 }
 
-/** Strip HTML tags and decode the entities Grants.gov/SAM.gov emit. */
+/** Decode a numeric character reference, leaving anything out of range as-is. */
+function fromCharCode(code: number, original: string): string {
+  return Number.isFinite(code) && code > 0 && code <= 0x10ffff
+    ? String.fromCodePoint(code)
+    : original;
+}
+
+/**
+ * Strip HTML tags and decode the entities the upstream feeds emit.
+ *
+ * Numeric references are decoded last and generically: RSS double-encodes
+ * (`&amp;#039;`), so the `&amp;` pass above leaves a bare `&#039;` behind that
+ * a fixed list of named entities would miss.
+ */
 export function cleanText(html: string): string {
   return html
     .replace(/<[^>]+>/g, " ")
@@ -44,9 +57,11 @@ export function cleanText(html: string): string {
     .replace(/&mdash;/g, "—")
     .replace(/&ndash;/g, "–")
     .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&apos;/g, "'")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
+    .replace(/&#x([0-9a-fA-F]+);/g, (m, hex) => fromCharCode(parseInt(hex, 16), m))
+    .replace(/&#(\d+);/g, (m, dec) => fromCharCode(Number(dec), m))
     .replace(/\s+/g, " ")
     .trim();
 }
