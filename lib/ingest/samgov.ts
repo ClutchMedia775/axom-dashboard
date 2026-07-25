@@ -52,7 +52,7 @@ function normalize(n: SamNotice): Opportunity {
     summary,
     pm: n.pointOfContact?.[0]?.fullName ?? "—",
     pmEmail: n.pointOfContact?.[0]?.email,
-    link: n.uiLink ?? `sam.gov/opp/${n.noticeId}/view`,
+    link: n.uiLink ?? `https://sam.gov/opp/${n.noticeId}/view`,
     eligibility: "See solicitation",
     requirements: "See full notice on SAM.gov",
     previousWinners: [],

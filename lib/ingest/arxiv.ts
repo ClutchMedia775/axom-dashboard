@@ -56,6 +56,7 @@ function normalize(e: ArxivEntry): Paper {
     venue: primary ? `arXiv ${primary}` : "arXiv",
     date: toIsoDate(e.published),
     tags,
+    url: `https://arxiv.org/abs/${shortId}`,
   };
 }
 

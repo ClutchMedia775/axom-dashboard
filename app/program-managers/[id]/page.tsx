@@ -40,7 +40,11 @@ export default function ProgramManagerDetailPage() {
         ] as const).filter(([, v]) => v !== "").map(([k, v]) => (
           <div key={k}>
             <div className="eyebrow">{k}</div>
-            <div className="prose-body text-ax-dim mt-1 leading-relaxed">{v}</div>
+            <div className="prose-body text-ax-dim mt-1 leading-relaxed">
+              {k === "Email" ? (
+                <a href={`mailto:${v}`} className="text-ax-accent hover:brightness-125 transition">{v}</a>
+              ) : v}
+            </div>
           </div>
         ))}
       </div>

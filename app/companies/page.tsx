@@ -1,5 +1,6 @@
 "use client";
 
+import { ExtLink } from "@/components/ext-link";
 import { useVenture } from "@/lib/hooks";
 
 export default function CompaniesPage() {
@@ -9,8 +10,10 @@ export default function CompaniesPage() {
       {(venture ?? []).map((v) => (
         <div key={v.id} className="glass rounded-2xl px-4 py-3.5 flex justify-between gap-4 items-center">
           <div>
-            <div className="text-xs text-ax-text font-medium">{v.co}</div>
-            <div className="prose-body text-[10px] text-ax-dim mt-0.5">{v.focus}</div>
+            <ExtLink href={v.link} className="text-xs text-ax-text font-medium">
+              {v.co}
+            </ExtLink>
+            <div className="prose-body text-[10px] text-ax-dim mt-0.5">{v.focus} · SEC Form D</div>
           </div>
           <div className="text-xs font-mono text-ax-accent tabular shrink-0">{v.round}</div>
         </div>

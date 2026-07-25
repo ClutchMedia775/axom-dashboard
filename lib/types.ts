@@ -10,6 +10,9 @@ export interface Opportunity {
   trl: string;
   techArea: string;
   summary: string;
+  /** Full solicitation text when the source provides it; summary is the
+   *  card-length cut. Absent for sources that only publish a title. */
+  description?: string;
   pm: string;
   /** Contact email from the solicitation, when the source publishes one. */
   pmEmail?: string;
@@ -46,6 +49,8 @@ export interface Paper {
   venue: string;
   date: string;
   tags: string[];
+  /** Link to the paper (arXiv abstract page). */
+  url?: string;
 }
 
 export interface NewsItem {
@@ -53,6 +58,8 @@ export interface NewsItem {
   src: string;
   date: string;
   title: string;
+  /** Link to the source article. */
+  link?: string;
 }
 
 export interface VentureRound {
@@ -61,4 +68,6 @@ export interface VentureRound {
   round: string;
   focus: string;
   date: string;
+  /** Link to the SEC filing index for the underlying Form D. */
+  link?: string;
 }

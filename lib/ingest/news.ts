@@ -45,7 +45,13 @@ function parseItems(xml: string, src: string): NewsItem[] {
     const date = toIsoDate(tagText(block, "pubDate"));
     if (!title || !date) return [];
     if (!RELEVANT.test(`${title} ${description}`)) return [];
-    return [{ id: `news-${src.toLowerCase()}-${slugOf(link, title)}`, src, date, title }];
+    return [{
+      id: `news-${src.toLowerCase()}-${slugOf(link, title)}`,
+      src,
+      date,
+      title,
+      link: /^https?:\/\//.test(link) ? link : undefined,
+    }];
   });
 }
 

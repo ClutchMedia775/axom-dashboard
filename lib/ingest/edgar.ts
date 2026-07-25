@@ -94,6 +94,8 @@ async function fetchFiling(hit: SearchHit): Promise<VentureRound | null> {
       round: `${formatAmount(sold)} raised`,
       focus: industry || "—",
       date: hit._source.file_date ?? "",
+      // Human-readable filing index page, not the raw XML we parsed.
+      link: `https://www.sec.gov/Archives/edgar/data/${cik}/${accession.replace(/-/g, "")}/${accession}-index.htm`,
     };
   } catch (error) {
     // A single unparseable filing is skipped, but an outright rejection is a
