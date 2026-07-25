@@ -60,15 +60,7 @@ function normalize(n: SamNotice): Opportunity {
   };
 }
 
-/**
- * Search active SAM.gov contract opportunities. Requires SAM_GOV_API_KEY
- * (free — generate one under your SAM.gov account profile). Returns [] when
- * the key is not configured so the app degrades gracefully to Grants.gov only.
- */
-export async function fetchSamGovOpportunities(title: string, limit = 25): Promise<Opportunity[]> {
-  const apiKey = process.env.SAM_GOV_API_KEY;
-  if (!apiKey) return [];
-
+async function searchTitle(apiKey: string, title: string, limit: number): Promise<SamNotice[]> {
   const to = new Date();
   const from = new Date(to);
   from.setDate(from.getDate() - 364);
@@ -86,8 +78,34 @@ export async function fetchSamGovOpportunities(title: string, limit = 25): Promi
   const res = await fetch(`${SEARCH_URL}?${params}`);
   if (!res.ok) throw new Error(`SAM.gov search failed: HTTP ${res.status}`);
   const json = await res.json();
-  const notices: SamNotice[] = json?.opportunitiesData ?? [];
-  return notices
+  return (json?.opportunitiesData as SamNotice[]) ?? [];
+}
+
+/**
+ * Search active SAM.gov contract opportunities across several title terms,
+ * deduped by notice. Requires SAM_GOV_API_KEY (free — generate one under your
+ * SAM.gov account profile). Returns [] when the key is not configured so the
+ * app degrades gracefully to Grants.gov only.
+ */
+export async function fetchSamGovOpportunities(
+  titles: string[],
+  limitPerTerm = 15,
+): Promise<Opportunity[]> {
+  const apiKey = process.env.SAM_GOV_API_KEY;
+  if (!apiKey) return [];
+
+  const searches = await Promise.allSettled(titles.map((t) => searchTitle(apiKey, t, limitPerTerm)));
+  if (searches.every((s) => s.status === "rejected")) {
+    throw new Error(`SAM.gov search failed: ${String((searches[0] as PromiseRejectedResult).reason)}`);
+  }
+
+  const byId = new Map<string, SamNotice>();
+  for (const s of searches) {
+    if (s.status !== "fulfilled") continue;
+    for (const n of s.value) if (!byId.has(n.noticeId)) byId.set(n.noticeId, n);
+  }
+
+  return [...byId.values()]
     .map(normalize)
     .filter((o) => o.deadline !== "" && new Date(o.deadline).getTime() > Date.now());
 }

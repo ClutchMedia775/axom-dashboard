@@ -8,12 +8,33 @@ import { NextResponse } from "next/server";
 // monitoring cadence until a real database + scheduled ingestion lands.
 export const revalidate = 3600;
 
-const SEARCH_TERM = "artificial intelligence";
+// One search per taxonomy area, not one per phrase in it — a solicitation
+// about autonomous laboratories that never says "artificial intelligence"
+// used to be invisible to the whole pipeline. Terms are phrased the way
+// solicitations are written, which is why this is curated rather than
+// generated from DEFAULT_WEIGHTS verbatim.
+const GRANTS_TERMS = [
+  "artificial intelligence",
+  "machine learning",
+  "autonomous laboratory",
+  "laboratory automation",
+  "high performance computing",
+  "multi-agent",
+  "drug discovery",
+];
+
+// SAM.gov searches spend API-key quota, so the sweep is narrower.
+const SAM_TERMS = [
+  "artificial intelligence",
+  "machine learning",
+  "autonomous",
+  "high performance computing",
+];
 
 export async function GET() {
   const results = await Promise.allSettled([
-    fetchGrantsGovOpportunities(SEARCH_TERM),
-    fetchSamGovOpportunities(SEARCH_TERM),
+    fetchGrantsGovOpportunities(GRANTS_TERMS),
+    fetchSamGovOpportunities(SAM_TERMS),
   ]);
 
   const opportunities: Opportunity[] = [];

@@ -111,11 +111,7 @@ function normalize(hit: OppHit, detail: OppDetail | null): Opportunity {
   };
 }
 
-/**
- * Search posted Grants.gov opportunities for a keyword and normalize them
- * into the app's Opportunity shape (detail-fetched for summaries/deadlines).
- */
-export async function fetchGrantsGovOpportunities(keyword: string, rows = 25): Promise<Opportunity[]> {
+async function searchTerm(keyword: string, rows: number): Promise<OppHit[]> {
   const res = await fetch(SEARCH_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -123,9 +119,41 @@ export async function fetchGrantsGovOpportunities(keyword: string, rows = 25): P
   });
   if (!res.ok) throw new Error(`Grants.gov search failed: HTTP ${res.status}`);
   const json = await res.json();
-  const hits: OppHit[] = json?.data?.oppHits ?? [];
-  const details = await Promise.all(hits.map((h) => fetchDetail(h.id)));
-  return hits
-    .map((h, i) => normalize(h, details[i]))
-    .filter((o) => o.deadline !== "");
+  return (json?.data?.oppHits as OppHit[]) ?? [];
+}
+
+// Detail fetches run in waves rather than all at once — a multi-term sweep
+// can surface 100+ distinct hits and Grants.gov gets one hourly burst as it is.
+const DETAIL_BATCH = 10;
+
+/**
+ * Search posted Grants.gov opportunities across several keywords and
+ * normalize them into the app's Opportunity shape (detail-fetched for full
+ * text and deadlines). Hits are deduped before the detail pass, so
+ * overlapping terms cost one fetch, not one per term. A term whose search
+ * fails is skipped; the sweep only throws when every term fails.
+ */
+export async function fetchGrantsGovOpportunities(
+  keywords: string[],
+  rowsPerTerm = 15,
+): Promise<Opportunity[]> {
+  const searches = await Promise.allSettled(keywords.map((k) => searchTerm(k, rowsPerTerm)));
+  if (searches.every((s) => s.status === "rejected")) {
+    throw new Error(`Grants.gov search failed: ${String((searches[0] as PromiseRejectedResult).reason)}`);
+  }
+
+  const byId = new Map<string, OppHit>();
+  for (const s of searches) {
+    if (s.status !== "fulfilled") continue;
+    for (const h of s.value) if (!byId.has(h.id)) byId.set(h.id, h);
+  }
+  const hits = [...byId.values()];
+
+  const out: Opportunity[] = [];
+  for (let i = 0; i < hits.length; i += DETAIL_BATCH) {
+    const batch = hits.slice(i, i + DETAIL_BATCH);
+    const details = await Promise.all(batch.map((h) => fetchDetail(h.id)));
+    out.push(...batch.map((h, j) => normalize(h, details[j])));
+  }
+  return out.filter((o) => o.deadline !== "");
 }
