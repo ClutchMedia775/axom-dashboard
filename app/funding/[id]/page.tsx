@@ -2,6 +2,7 @@
 
 import { useAppState } from "@/components/app-state";
 import { Deadline } from "@/components/deadline";
+import { PipelinePanel } from "@/components/pipeline-panel";
 import { ScoreBadge } from "@/components/score-badge";
 import { useProgramManagers, useScoredOpportunities } from "@/lib/hooks";
 import { Bookmark, ChevronLeft, ChevronRight, ExternalLink, Sparkles } from "lucide-react";
@@ -83,6 +84,8 @@ export default function OpportunityDetailPage() {
           <span key={k} className="text-[10px] font-mono px-2 py-1 rounded-lg glass text-ax-dim">{k}</span>
         ))}
       </div>
+
+      <PipelinePanel oppId={o.id} />
 
       {pm && (
         <button onClick={() => router.push(`/program-managers/${pm.id}`)}

@@ -10,7 +10,7 @@ import { useParams, useRouter } from "next/navigation";
 export default function ProgramManagerDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { setScoreModal } = useAppState();
+  const { setScoreModal, notes, setNote } = useAppState();
   const { data: pms } = useProgramManagers();
   const scored = useScoredOpportunities();
 
@@ -55,6 +55,17 @@ export default function ProgramManagerDetailPage() {
           <div className="prose-body text-xs text-ax-text mt-1.5 leading-relaxed">{p.relationship}</div>
         </div>
       )}
+
+      <div className="glass rounded-2xl p-5 mb-3">
+        <div className="eyebrow mb-1.5">Relationship Notes</div>
+        <textarea
+          value={notes[p.id] ?? ""}
+          onChange={(e) => setNote(p.id, e.target.value)}
+          placeholder="Contact history, warm intro paths, framing that landed…"
+          rows={3}
+          className="prose-body w-full rounded-xl px-3 py-2 text-xs text-ax-text placeholder-ax-muted bg-ax-glass border border-ax focus:outline-none focus:border-ax-accent-border transition resize-y"
+        />
+      </div>
 
       {theirOpps.length > 0 && (
         <div>

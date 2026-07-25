@@ -30,7 +30,7 @@ export const NAV: NavItem[] = [
   { href: "/papers", label: "Scientific Papers", icon: FileText },
   { href: "/companies", label: "Companies", icon: Building2 },
   { href: "/news", label: "News", icon: Newspaper },
-  { href: "/saved", label: "Saved Opportunities", icon: Star },
+  { href: "/saved", label: "Pipeline", icon: Star },
   { href: "/bookmarks", label: "Bookmarks", icon: Bookmark },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

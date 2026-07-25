@@ -7,13 +7,20 @@ import { KpiStrip } from "@/components/kpi-strip";
 import { ScoreBadge } from "@/components/score-badge";
 import { Widget } from "@/components/widget";
 import { useNews, usePapers, useProgramManagers, useScoredOpportunities, useVenture } from "@/lib/hooks";
+import { ACTIVE_STAGES, STAGE_LABELS } from "@/lib/pipeline";
 import { ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { setAgencyFilter, setScoreModal } = useAppState();
+  const { setAgencyFilter, setScoreModal, bookmarks, entryFor } = useAppState();
   const scored = useScoredOpportunities();
+
+  // Tracked pursuits still in play, nearest deadline first — the day's worklist.
+  const needsAction = scored
+    .filter((o) => bookmarks.has(o.id) && ACTIVE_STAGES.includes(entryFor(o.id).stage))
+    .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
+    .slice(0, 4);
   const { data: pms } = useProgramManagers();
   const { data: papers } = usePapers();
   const { data: news } = useNews();
@@ -100,6 +107,27 @@ export default function DashboardPage() {
               <div className="text-[10px] text-ax-muted font-mono mt-1">{n.src} · {n.date}</div>
             </div>
           ))}
+        </Widget>
+
+        <Widget title="Pipeline — Needs Action" action={() => router.push("/saved")}>
+          {needsAction.length === 0 && (
+            <div className="px-2 py-2 prose-body text-xs text-ax-muted">
+              No active pursuits — track opportunities from the funding table.
+            </div>
+          )}
+          {needsAction.map((o) => {
+            const entry = entryFor(o.id);
+            const open = entry.tasks.filter((t) => !t.done).length;
+            return (
+              <button key={o.id} onClick={() => router.push(`/funding/${o.id}`)}
+                className="w-full text-left px-2 py-2 rounded-xl hover:bg-ax-glass transition">
+                <div className="text-xs text-ax-text font-medium truncate">{o.program}</div>
+                <div className="text-[10px] text-ax-dim font-mono mt-0.5">
+                  {STAGE_LABELS[entry.stage]} · <Deadline d={o.deadline} /> · {open} open task{open === 1 ? "" : "s"}
+                </div>
+              </button>
+            );
+          })}
         </Widget>
 
       </div>

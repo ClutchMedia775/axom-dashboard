@@ -1,6 +1,7 @@
 "use client";
 
 import { usePersistentState } from "@/lib/persist";
+import { newPipelineEntry, pipelineCodec, type PipelineEntry, type Stage } from "@/lib/pipeline";
 import { DEFAULT_WEIGHTS, type ScoringWeight } from "@/lib/scoring";
 import type { Opportunity } from "@/lib/types";
 import type { ScoreResult } from "@/lib/scoring";
@@ -38,6 +39,12 @@ interface AppState {
   /** Free-text notes keyed by record id (opportunity or program manager). */
   notes: Record<string, string>;
   setNote: (id: string, text: string) => void;
+  /** Pursuit pipeline, keyed by opportunity id. Entries exist only once the
+   *  user interacts; entryFor() supplies the default for tracked-but-untouched. */
+  pipeline: Record<string, PipelineEntry>;
+  entryFor: (id: string) => PipelineEntry;
+  setStage: (id: string, stage: Stage) => void;
+  toggleTask: (id: string, taskId: string) => void;
   weights: ScoringWeight[];
   setWeights: React.Dispatch<React.SetStateAction<ScoringWeight[]>>;
   resetWeights: () => void;
@@ -56,6 +63,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [agencyFilter, setAgencyFilter] = useState("All");
   const [bookmarks, setBookmarks] = usePersistentState<Set<string>>("axom.bookmarks", new Set(), bookmarksCodec);
   const [notes, setNotes] = usePersistentState<Record<string, string>>("axom.notes", {});
+  const [pipeline, setPipeline] = usePersistentState<Record<string, PipelineEntry>>("axom.pipeline", {}, pipelineCodec);
   const [weights, setWeights] = usePersistentState<ScoringWeight[]>("axom.weights", DEFAULT_WEIGHTS, weightsCodec);
   const [scoreModal, setScoreModal] = useState<ScoredOpportunity | null>(null);
   const [assistantOpen, setAssistantOpen] = useState(false);
@@ -86,18 +94,41 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     });
   }, [setNotes]);
 
+  const entryFor = useCallback(
+    (id: string): PipelineEntry => pipeline[id] ?? newPipelineEntry(),
+    [pipeline],
+  );
+
+  const setStage = useCallback((id: string, stage: Stage) => {
+    setPipeline((p) => ({ ...p, [id]: { ...(p[id] ?? newPipelineEntry()), stage } }));
+  }, [setPipeline]);
+
+  const toggleTask = useCallback((id: string, taskId: string) => {
+    setPipeline((p) => {
+      const entry = p[id] ?? newPipelineEntry();
+      return {
+        ...p,
+        [id]: {
+          ...entry,
+          tasks: entry.tasks.map((t) => (t.id === taskId ? { ...t, done: !t.done } : t)),
+        },
+      };
+    });
+  }, [setPipeline]);
+
   const value = useMemo<AppState>(
     () => ({
       search, setSearch,
       agencyFilter, setAgencyFilter,
       bookmarks, toggleBookmark,
       notes, setNote,
+      pipeline, entryFor, setStage, toggleTask,
       weights, setWeights, resetWeights,
       scoreModal, setScoreModal,
       assistantOpen, setAssistantOpen,
       assistantContext, setAssistantContext,
     }),
-    [search, agencyFilter, bookmarks, toggleBookmark, notes, setNote, weights, setWeights, resetWeights, scoreModal, assistantOpen, assistantContext],
+    [search, agencyFilter, bookmarks, toggleBookmark, notes, setNote, pipeline, entryFor, setStage, toggleTask, weights, setWeights, resetWeights, scoreModal, assistantOpen, assistantContext],
   );
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;

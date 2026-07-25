@@ -99,9 +99,16 @@ provide rather than what we would prefer:
   profile URL from a person's name would fabricate a record about a real
   individual.
 
+**Pursuit pipeline** (`lib/pipeline.ts`) — bookmarking an opportunity tracks it
+through Identified → Qualifying → Pursuing → Drafting → Submitted → Won/Lost,
+with a per-opportunity checklist and notes. `/saved` shows the pipeline grouped
+by stage; the dashboard surfaces active pursuits by nearest deadline. State
+persists in localStorage (`lib/persist.ts`) behind the same interface a
+database-backed store would present.
+
 **Routes** — `/dashboard`, `/funding` (+ detail), `/program-managers`
-(+ detail), `/settings`, plus reference sections for agencies, labs, biotech,
-papers, news, conferences, and companies.
+(+ detail), `/saved` (pipeline), `/settings`, plus reference sections for
+agencies, labs, biotech, papers, news, and companies.
 
 ## Current status
 
