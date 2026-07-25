@@ -54,6 +54,10 @@ function field(xml: string, tag: string): string {
   return m ? m[1].trim() : "";
 }
 
+/** Thrown when SEC rejects us outright, so the cause is visible rather than
+ *  surfacing as a silently empty panel. */
+class SecRejectedError extends Error {}
+
 async function fetchFiling(hit: SearchHit): Promise<VentureRound | null> {
   const [accession, file] = hit._id.split(":");
   const cik = (hit._source.ciks?.[0] ?? "").replace(/^0+/, "");
@@ -62,6 +66,14 @@ async function fetchFiling(hit: SearchHit): Promise<VentureRound | null> {
   try {
     const url = `${ARCHIVE_URL}/${cik}/${accession.replace(/-/g, "")}/${file}`;
     const res = await fetch(url, { headers: { "User-Agent": userAgent() } });
+    // www.sec.gov enforces the contact policy that the search host does not:
+    // a User-Agent without real contact details gets a blanket 403, which
+    // would otherwise filter every filing out and look like "no results".
+    if (res.status === 403) {
+      throw new SecRejectedError(
+        "SEC returned 403 for filing documents. Set SEC_EDGAR_USER_AGENT to real contact details, e.g. \"Your Org (you@example.com)\".",
+      );
+    }
     if (!res.ok) return null;
     const xml = await res.text();
 
@@ -83,7 +95,10 @@ async function fetchFiling(hit: SearchHit): Promise<VentureRound | null> {
       focus: industry || "—",
       date: hit._source.file_date ?? "",
     };
-  } catch {
+  } catch (error) {
+    // A single unparseable filing is skipped, but an outright rejection is a
+    // configuration fault affecting every filing — let it surface.
+    if (error instanceof SecRejectedError) throw error;
     return null;
   }
 }
