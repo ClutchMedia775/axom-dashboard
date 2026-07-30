@@ -3,6 +3,7 @@
 import { useAppState } from "@/components/app-state";
 import { Deadline } from "@/components/deadline";
 import { DeadlineTimeline } from "@/components/deadline-timeline";
+import { ExtLink } from "@/components/ext-link";
 import { KpiStrip } from "@/components/kpi-strip";
 import { ScoreBadge } from "@/components/score-badge";
 import { Widget } from "@/components/widget";
@@ -71,10 +72,19 @@ export default function DashboardPage() {
           {(venture ?? []).map((v) => (
             <div key={v.id} className="px-2 py-2 flex justify-between gap-2">
               <div className="min-w-0">
-                <div className="text-xs text-ax-text truncate">{v.co}</div>
-                <div className="text-[10px] text-ax-dim truncate">{v.focus}</div>
+                <ExtLink href={v.link} className="text-xs text-ax-text truncate">
+                  {v.co}
+                </ExtLink>
+                <div className="text-[10px] text-ax-dim truncate">
+                  {[v.focus, v.location, v.investors ? `${v.investors} investors` : ""].filter(Boolean).join(" · ")}
+                </div>
               </div>
-              <div className="text-[11px] font-mono text-ax-accent shrink-0 tabular">{v.round}</div>
+              <div className="text-right shrink-0">
+                <div className="text-[11px] font-mono text-ax-accent tabular">{v.round}</div>
+                {v.offeringStatus && (
+                  <div className="text-[9px] font-mono text-ax-muted">{v.offeringStatus}</div>
+                )}
+              </div>
             </div>
           ))}
         </Widget>
@@ -94,7 +104,9 @@ export default function DashboardPage() {
         <Widget title="Recent Scientific AI Papers" action={() => router.push("/papers")}>
           {(papers ?? []).slice(0, 3).map((p) => (
             <div key={p.id} className="px-2 py-2">
-              <div className="prose-body text-xs text-ax-dim leading-snug">{p.title}</div>
+              <ExtLink href={p.url} className="prose-body text-xs text-ax-dim leading-snug">
+                {p.title}
+              </ExtLink>
               <div className="text-[10px] text-ax-muted font-mono mt-1">{p.venue} · {p.date}</div>
             </div>
           ))}
@@ -103,7 +115,9 @@ export default function DashboardPage() {
         <Widget title="AI Policy & News" action={() => router.push("/news")}>
           {(news ?? []).slice(0, 3).map((n) => (
             <div key={n.id} className="px-2 py-2">
-              <div className="prose-body text-xs text-ax-dim leading-snug">{n.title}</div>
+              <ExtLink href={n.link} className="prose-body text-xs text-ax-dim leading-snug">
+                {n.title}
+              </ExtLink>
               <div className="text-[10px] text-ax-muted font-mono mt-1">{n.src} · {n.date}</div>
             </div>
           ))}
