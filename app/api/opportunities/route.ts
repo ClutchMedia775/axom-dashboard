@@ -1,6 +1,7 @@
 import { classifyOpportunities } from "@/lib/ingest/classifier";
 import { fetchGrantsGovOpportunities } from "@/lib/ingest/grantsgov";
 import { fetchSamGovOpportunities } from "@/lib/ingest/samgov";
+import { fetchSbirOpportunities } from "@/lib/ingest/sbir";
 import type { Opportunity } from "@/lib/types";
 import { NextResponse } from "next/server";
 
@@ -31,10 +32,20 @@ const SAM_TERMS = [
   "high performance computing",
 ];
 
+// SBIR.gov's public API is in an outage as of 2026-07-24 (429 on every
+// request). The source stays in the sweep: failures land in `errors` while
+// the other sources proceed, and records appear automatically on recovery.
+const SBIR_TERMS = [
+  "artificial intelligence",
+  "machine learning",
+  "autonomous",
+];
+
 export async function GET() {
   const results = await Promise.allSettled([
     fetchGrantsGovOpportunities(GRANTS_TERMS),
     fetchSamGovOpportunities(SAM_TERMS),
+    fetchSbirOpportunities(SBIR_TERMS),
   ]);
 
   const opportunities: Opportunity[] = [];
