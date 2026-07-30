@@ -70,4 +70,13 @@ export interface VentureRound {
   date: string;
   /** Link to the SEC filing index for the underlying Form D. */
   link?: string;
+  /** Issuer HQ, e.g. "Scottsdale, AZ". */
+  location?: string;
+  /** Number of investors reported on the filing. */
+  investors?: number;
+  /** "Equity", "Debt", or "Equity + Debt". */
+  securityType?: string;
+  /** How the raise stands against its target: "fully subscribed",
+   *  "of $20.0M target", or "open-ended offering". */
+  offeringStatus?: string;
 }

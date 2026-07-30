@@ -88,6 +88,29 @@ async function fetchFiling(hit: SearchHit): Promise<VentureRound | null> {
     const name = field(xml, "entityName") || (hit._source.display_names?.[0] ?? "").split("  (CIK")[0];
     if (!name) return null;
 
+    // Form D carries no use-of-proceeds text, so purpose cannot be reported —
+    // but target vs. sold, investor count, HQ, and security type all can.
+    // The first <city>/<stateOrCountry> pair belongs to the primary issuer;
+    // related persons' addresses appear later in the document (verified).
+    const cityRaw = field(xml, "city");
+    const city = /[a-z]/.test(cityRaw) ? cityRaw : cityRaw.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+    // US states are two letters; EDGAR's foreign codes carry a digit ("V8" =
+    // Switzerland), so fall back to the spelled-out description for those.
+    const code = field(xml, "stateOrCountry");
+    const desc = field(xml, "stateOrCountryDescription");
+    const state = /^[A-Z]{2}$/.test(code)
+      ? code
+      : desc.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+    const investors = Number(field(xml, "totalNumberAlreadyInvested"));
+    const equity = /<isEquityType>\s*true/.test(xml);
+    const debt = /<isDebtType>\s*true/.test(xml);
+    const offeringRaw = field(xml, "totalOfferingAmount");
+    const offering = Number(offeringRaw);
+    let offeringStatus: string | undefined;
+    if (/indefinite/i.test(offeringRaw)) offeringStatus = "open-ended offering";
+    else if (Number.isFinite(offering) && offering > sold) offeringStatus = `of ${formatAmount(offering)} target`;
+    else if (Number.isFinite(offering) && offering > 0) offeringStatus = "fully subscribed";
+
     return {
       id: `edgar-${accession}`,
       co: name,
@@ -96,6 +119,10 @@ async function fetchFiling(hit: SearchHit): Promise<VentureRound | null> {
       date: hit._source.file_date ?? "",
       // Human-readable filing index page, not the raw XML we parsed.
       link: `https://www.sec.gov/Archives/edgar/data/${cik}/${accession.replace(/-/g, "")}/${accession}-index.htm`,
+      location: city && state ? `${city}, ${state}` : undefined,
+      investors: Number.isFinite(investors) && investors > 0 ? investors : undefined,
+      securityType: equity && debt ? "Equity + Debt" : equity ? "Equity" : debt ? "Debt" : undefined,
+      offeringStatus,
     };
   } catch (error) {
     // A single unparseable filing is skipped, but an outright rejection is a
