@@ -7,7 +7,7 @@ import { ScoreModal } from "@/components/score-modal";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NAV } from "@/lib/constants";
 import { isLiveProvider, provider } from "@/lib/providers";
-import { Bell, Search, Sparkles, Target } from "lucide-react";
+import { Bell, ChevronLeft, Home, Search, Sparkles, Target } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
@@ -68,6 +68,19 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="flex-1 flex flex-col min-w-0">
           {/* Top bar */}
           <header className="h-14 shrink-0 flex items-center gap-3 px-4 sticky top-0 z-40 glass border-x-0 border-t-0 rounded-none">
+            {/* Below md the sidebar is hidden, leaving no way back or home —
+                these two buttons exist only there. */}
+            <div className="flex md:hidden items-center gap-1.5 shrink-0">
+              <button onClick={() => router.back()} aria-label="Go back"
+                className="glass glass-hover rounded-lg p-2 text-ax-dim hover:text-ax-text transition">
+                <ChevronLeft size={14} />
+              </button>
+              <Link href="/dashboard" aria-label="Home"
+                className="glass glass-hover rounded-lg p-2 text-ax-dim hover:text-ax-text transition">
+                <Home size={14} />
+              </Link>
+            </div>
+
             <div className="flex-1 max-w-xl relative">
               <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-ax-muted" />
               <input value={search}
