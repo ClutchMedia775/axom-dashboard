@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppState } from "@/components/app-state";
-import { Deadline } from "@/components/deadline";
+import { Deadline, isExpired } from "@/components/deadline";
 import { DeadlineTimeline } from "@/components/deadline-timeline";
 import { ExtLink } from "@/components/ext-link";
 import { KpiStrip } from "@/components/kpi-strip";
@@ -27,8 +27,13 @@ export default function DashboardPage() {
   const { data: news } = useNews();
   const { data: venture } = useVenture();
 
-  const deadlines = [...scored].sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime()).slice(0, 6);
-  const byAgency = (ag: string) => scored.filter((o) => o.agency === ag);
+  // Dashboard widgets show only open opportunities — an expired deadline
+  // sorts to the top of an ascending list and would squat there forever.
+  // Expired records remain reachable on /funding behind its toggle, and
+  // tracked pursuits keep showing overdue items in Needs Action on purpose.
+  const fresh = scored.filter((o) => !isExpired(o.deadline));
+  const deadlines = [...fresh].sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime()).slice(0, 6);
+  const byAgency = (ag: string) => fresh.filter((o) => o.agency === ag);
   const agenciesWithItems = ["DARPA", "DOE", "ARPA-H", "NSF", "NIH", "NIST"].filter((ag) => byAgency(ag).length > 0);
 
   return (

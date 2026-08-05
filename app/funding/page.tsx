@@ -1,18 +1,25 @@
 "use client";
 
 import { useAppState } from "@/components/app-state";
-import { Deadline } from "@/components/deadline";
+import { Deadline, isExpired } from "@/components/deadline";
 import { ScoreBadge } from "@/components/score-badge";
 import { AGENCIES } from "@/lib/constants";
 import { useFilteredOpportunities, useScoredOpportunities } from "@/lib/hooks";
-import { Bookmark, Filter } from "lucide-react";
+import { Bookmark, Filter, History } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function FundingPage() {
   const router = useRouter();
   const { agencyFilter, setAgencyFilter, bookmarks, toggleBookmark, setScoreModal } = useAppState();
   const scored = useScoredOpportunities();
   const filtered = useFilteredOpportunities();
+
+  // Expired solicitations stay out of the table by default so the list is
+  // always the live field — the toggle brings them back for reference.
+  const [showExpired, setShowExpired] = useState(false);
+  const visible = showExpired ? filtered : filtered.filter((o) => !isExpired(o.deadline));
+  const expiredCount = filtered.length - filtered.filter((o) => !isExpired(o.deadline)).length;
 
   const chips = ["All", ...new Set([...AGENCIES.filter((a) => scored.some((o) => o.agency === a)), ...scored.map((o) => o.agency)])];
 
@@ -30,7 +37,16 @@ export default function FundingPage() {
             {a}
           </button>
         ))}
-        <span className="text-[11px] text-ax-muted ml-auto font-mono tabular">{filtered.length} results · sorted by score</span>
+        <button onClick={() => setShowExpired((v) => !v)}
+          title={showExpired ? "Hide expired solicitations" : "Show expired solicitations"}
+          className={`flex items-center gap-1.5 text-[11px] font-mono px-2.5 py-1 rounded-lg border transition ${
+            showExpired
+              ? "border-ax-accent-border bg-ax-accent-bg text-ax-accent font-semibold"
+              : "border-ax text-ax-dim hover:text-ax-text hover:border-ax-strong"
+          }`}>
+          <History size={11} /> Expired{expiredCount > 0 ? ` (${expiredCount})` : ""}
+        </button>
+        <span className="text-[11px] text-ax-muted ml-auto font-mono tabular">{visible.length} results · sorted by score</span>
       </div>
 
       {/* Table rows stay flat — blurring 25 rows at once stutters on older GPUs. */}
@@ -47,7 +63,7 @@ export default function FundingPage() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((o) => (
+            {visible.map((o) => (
               <tr key={o.id} className="border-b border-ax last:border-0 hover:bg-ax-glass-hi transition cursor-pointer"
                 onClick={() => router.push(`/funding/${o.id}`)}>
                 <td className="px-3 py-2.5"><ScoreBadge s={o._s.score} onClick={(e) => { e.stopPropagation(); setScoreModal(o); }} /></td>
@@ -67,7 +83,7 @@ export default function FundingPage() {
                 </td>
               </tr>
             ))}
-            {filtered.length === 0 && (
+            {visible.length === 0 && (
               <tr><td colSpan={6} className="prose-body px-3 py-6 text-center text-xs text-ax-muted">No opportunities match this filter.</td></tr>
             )}
           </tbody>
